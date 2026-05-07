@@ -25,4 +25,8 @@ class Client extends Model
     'phone',
     'email',
 ];
+public function policies()
+{
+    return $this->hasMany(Policy::class);
+}
 }

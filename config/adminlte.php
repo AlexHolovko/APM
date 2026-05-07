@@ -363,32 +363,47 @@ return [
     ],
 
     // ================= MANAGER =================
-    ['header' => 'МЕНЕДЖЕР'],
+    [
+    'header' => 'МЕНЕДЖЕР',
+],
+[
+    'text' => 'Панель менеджера',
+    'route' => 'manager.dashboard',
+    'icon' => 'fas fa-chart-line',
+    'can' => 'manager',
+],
+[
+    'text' => 'Клієнти (CRM)',
+    'route' => 'manager.clients.index',
+    'icon' => 'fas fa-user-friends',
+    'can' => 'manager',
+],
+[
+    'text' => 'Типи полісів',
+    'route' => 'manager.policy-types.index',
+    'icon' => 'fas fa-list',
+    'can' => 'manager',
+],
+[
+    'text' => 'Поліси',
+    'route' => 'manager.policies.index',
+    'icon' => 'fas fa-file-contract',
+    'can' => 'manager',
+],
+[
+    'text' => 'Аналітика',
+    'route' => 'manager.analytics',
+    'icon' => 'fas fa-chart-line',
+    'can' => 'manager',
+],
 
-    [
-      'text' => 'Панель менеджера',
-      'url' => '/manager',
-      'icon' => 'fas fa-chart-line',
-      'can' => 'manager',
-    ],
-    [
-      'text' => 'Клієнти (CRM)',
-      'url' => '/manager/clients',
-      'icon' => 'fas fa-user-friends',
-      'can' => 'manager',
-    ],
-    [
-      'text' => 'Поліси',
-      'url' => '/manager/clients/policies',
-      'icon' => 'fas fa-file-contract',
-      'can' => 'manager',
-    ],
-    [
-      'text' => 'Заявки',
-      'url' => '/manager/applications',
-      'icon' => 'fas fa-inbox',
-      'can' => 'manager',
-    ],
+// [
+//     'text' => 'Заявки',
+//     'route' => 'manager.applications.index',
+//     'icon' => 'fas fa-inbox',
+//     'can' => 'manager',
+// ],
+
 
     // ================= SPECIALIST =================
     ['header' => 'СТРАХОВІ ВИПАДКИ'],

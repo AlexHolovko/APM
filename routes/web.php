@@ -3,10 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\PolicyController;
+
+use App\Http\Controllers\Manager\DashboardController;
+use App\Http\Controllers\Manager\ClientController;
+use App\Http\Controllers\Manager\PolicyController;
+use App\Http\Controllers\Manager\PolicyTypeController;
+use App\Http\Controllers\Manager\AnalyticsController;
+
 /*
 |--------------------------------------------------------------------------
 | PUBLIC
@@ -31,6 +37,7 @@ Route::post('/login', function (Request $request) {
 
   if (Auth::attempt($request->only('email', 'password'))) {
     $request->session()->regenerate();
+
     return match (auth()->user()->role) {
       'admin' => redirect('/admin'),
       'manager' => redirect('/manager'),
@@ -75,58 +82,81 @@ Route::middleware('auth')->group(function () {
 
   /*
   |--------------------------------------------------------------------------
-  | MANAGER (АРМ)
+  | MANAGER
   |--------------------------------------------------------------------------
   */
-  // ==================== MANAGER ROUTES ====================
-  Route::middleware(['auth', 'role:manager'])
+  Route::middleware('role:manager')
     ->prefix('manager')
     ->name('manager.')
     ->group(function () {
 
       // Dashboard
-      Route::get('/', [\App\Http\Controllers\Manager\DashboardController::class, 'index'])
+      Route::get('/', [DashboardController::class, 'index'])
         ->name('dashboard');
 
-      // Клієнти
-      Route::get('/clients', [\App\Http\Controllers\Manager\ClientController::class, 'index'])
+      /*
+      |--------------------------------------------------------------------------
+      | CLIENTS
+      |--------------------------------------------------------------------------
+      */
+      Route::get('/clients', [ClientController::class, 'index'])
         ->name('clients.index');
 
-      Route::get('/clients/create', [\App\Http\Controllers\Manager\ClientController::class, 'create'])
+      Route::get('/clients/create', [ClientController::class, 'create'])
         ->name('clients.create');
 
-      Route::post('/clients', [\App\Http\Controllers\Manager\ClientController::class, 'store'])
+      Route::post('/clients', [ClientController::class, 'store'])
         ->name('clients.store');
 
-      Route::get('/clients/{client}/edit', [\App\Http\Controllers\Manager\ClientController::class, 'edit'])
+      Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])
         ->name('clients.edit');
 
-      Route::put('/clients/{client}', [\App\Http\Controllers\Manager\ClientController::class, 'update'])
+      Route::put('/clients/{client}', [ClientController::class, 'update'])
         ->name('clients.update');
 
-      Route::delete('/clients/{client}', [\App\Http\Controllers\Manager\ClientController::class, 'destroy'])
+      Route::delete('/clients/{client}', [ClientController::class, 'destroy'])
         ->name('clients.destroy');
 
-      // ==================== ПОЛІСИ ====================
-      Route::prefix('manager')->name('manager.')->middleware(['auth', 'role:manager'])->group(function () {
+      /*
+      |--------------------------------------------------------------------------
+      | POLICIES (ВИПРАВЛЕНО)
+      |--------------------------------------------------------------------------
+      */
+      Route::get('/policies', [PolicyController::class, 'index'])
+        ->name('policies.index');
 
-        Route::get('/policies', [PolicyController::class, 'index'])
-          ->name('policies.index');
+      Route::post('/policies', [PolicyController::class, 'store'])
+        ->name('policies.store');
 
-        Route::post('/policies', [PolicyController::class, 'store'])
-          ->name('policies.store');
+      Route::put('/policies/{policy}', [PolicyController::class, 'update'])
+        ->name('policies.update');
 
-        Route::put('/policies/{policy}', [PolicyController::class, 'update'])
-          ->name('policies.update');
-
-        Route::delete('/policies/{policy}', [PolicyController::class, 'destroy'])
-          ->name('policies.destroy');
-
-      });
+      Route::delete('/policies/{policy}', [PolicyController::class, 'destroy'])
+        ->name('policies.destroy');
     });
+  Route::middleware('role:manager')
+    ->prefix('manager')
+    ->name('manager.')
+    ->group(function () {
+      // ... інші маршрути ...
+  
+      // POLICY TYPES
+      Route::get('/policy-types', [PolicyTypeController::class, 'index'])
+        ->name('policy-types.index');
+      Route::post('/policy-types', [PolicyTypeController::class, 'store'])
+        ->name('policy-types.store');
+      Route::put('/policy-types/{policyType}', [PolicyTypeController::class, 'update'])
+        ->name('policy-types.update');
+      Route::delete('/policy-types/{policyType}', [PolicyTypeController::class, 'destroy'])
+        ->name('policy-types.destroy');
+      Route::get('/analytics', [AnalyticsController::class, 'index'])
+        ->name('analytics');
+
+    });
+
   /*
   |--------------------------------------------------------------------------
-  | SPECIALIST (страхові випадки)
+  | SPECIALIST
   |--------------------------------------------------------------------------
   */
   Route::middleware('role:specialist')->prefix('specialist')->group(function () {
@@ -159,7 +189,8 @@ Route::middleware('auth')->group(function () {
   | PROFILE
   |--------------------------------------------------------------------------
   */
-  Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+  Route::get('/profile', [ProfileController::class, 'index'])
+    ->name('profile');
 
   Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
     ->name('profile.password');

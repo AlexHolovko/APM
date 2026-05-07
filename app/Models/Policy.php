@@ -9,80 +9,36 @@ class Policy extends Model
 {
     use HasFactory;
 
-    protected $table = 'policies';
-    
+    // ВИМИКАЄМО auto timestamps
+    public $timestamps = false;
+
+    const STATUS_ACTIVE = 'active';
+    const STATUS_EXPIRED = 'expired';
+    const STATUS_CANCELLED = 'cancelled';
+
     protected $fillable = [
+        'client_id',
+        'policy_type_id', 
         'policy_number',
         'start_date',
         'end_date',
         'premium',
         'status',
-        'user_id',
-        'application_id'
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'premium' => 'decimal:2'
+        'premium' => 'decimal:2',
     ];
 
-    // Статусы полисов
-    const STATUS_ACTIVE = 'active';
-    const STATUS_EXPIRED = 'expired';
-    const STATUS_CANCELLED = 'cancelled';
-    const STATUS_PENDING = 'pending';
-
-    const STATUSES = [
-        self::STATUS_ACTIVE => 'Активный',
-        self::STATUS_EXPIRED => 'Просрочен',
-        self::STATUS_CANCELLED => 'Отменен',
-        self::STATUS_PENDING => 'Ожидает'
-    ];
-
-    // Отношения
-    public function user()
+    public function client()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Client::class);
     }
 
-    public function application()
+    public function policyType()
     {
-        return $this->belongsTo(Application::class);
-    }
-
-    public function contract()
-    {
-        return $this->hasOne(Contract::class);
-    }
-
-    // Скоупы
-    public function scopeActive($query)
-    {
-        return $query->where('status', self::STATUS_ACTIVE);
-    }
-
-    public function scopeByUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    // Геттеры
-    public function getStatusNameAttribute()
-    {
-        return self::STATUSES[$this->status] ?? $this->status;
-    }
-
-    public function getDaysRemainingAttribute()
-    {
-        if ($this->end_date < now()) {
-            return 0;
-        }
-        return now()->diffInDays($this->end_date);
-    }
-
-    public function isValid()
-    {
-        return $this->status === self::STATUS_ACTIVE && $this->end_date >= now();
+        return $this->belongsTo(PolicyType::class);
     }
 }
