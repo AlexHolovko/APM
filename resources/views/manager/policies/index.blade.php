@@ -7,7 +7,16 @@
 <div class="container-fluid">
     <h3>Поліси</h3>
 
-    {{-- CREATE --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    {{-- CREATE FORM --}}
     <div class="card mb-3">
         <div class="card-header">
             <h4>Додати новий поліс</h4>
@@ -17,8 +26,9 @@
                 @csrf
 
                 <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <select name="client_id" class="form-control" required>
+                    <div class="col-md-4 mb-3">
+                        <label>Клієнт</label>
+                        <select name="client_id" class="form-control @error('client_id') is-invalid @enderror" required>
                             <option value="">Виберіть клієнта</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}">
@@ -26,244 +36,264 @@
                                 </option>
                             @endforeach
                         </select>
+                        @error('client_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <div class="col-md-2 mb-2">
-                        <select name="policy_type_id" class="form-control" required>
+                    <div class="col-md-4 mb-3">
+                        <label>Тип полісу</label>
+                        <select name="policy_type_id" id="policy_type_id" class="form-control @error('policy_type_id') is-invalid @enderror" required>
                             <option value="">Виберіть тип полісу</option>
                             @foreach($policyTypes as $type)
                                 <option value="{{ $type->id }}" 
                                     data-premium="{{ $type->default_premium }}"
-                                    data-duration="{{ $type->duration_months }}">
-                                    {{ $type->name }} ({{ $type->code }})
+                                    data-duration="{{ $type->duration_months }}"
+                                    data-franchise-value="{{ $type->franchise_value }}"
+                                    data-franchise-type="{{ $type->franchise_type }}">
+                                    {{ $type->name }} ({{ $type->code }}) - 
+                                    вартість: {{ number_format($type->default_premium, 2) }} грн - 
+                                    термін: {{ $type->duration_months }} міс.
+                                    @if($type->franchise_value > 0)
+                                        - франшиза: {{ $type->franchise_value }} 
+                                        ({{ $type->franchise_type == 'fixed' ? 'грн' : '%' }})
+                                    @endif
                                 </option>
                             @endforeach
                         </select>
+                        @error('policy_type_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    <div class="col-md-2 mb-2">
-                        <input type="text" name="policy_number" class="form-control" placeholder="Номер полісу" required>
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <input type="date" name="start_date" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-2 mb-2">
-                        <input type="date" name="end_date" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-1 mb-2">
-                        <button class="btn btn-success w-100">Додати</button>
+                    <div class="col-md-4 mb-3">
+                        <label>Номер полісу</label>
+                        <input type="text" name="policy_number" class="form-control @error('policy_number') is-invalid @enderror" placeholder="Номер полісу" required>
+                        @error('policy_number')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
-                <div class="row mt-2">
-                    <div class="col-md-3">
-                        <input type="number" step="0.01" name="premium" class="form-control" placeholder="Премія (грн)" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Дата початку страхування</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') is-invalid @enderror" required>
+                        @error('start_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Дата закінчення страхування (розраховується автоматично)</label>
+                        <input type="date" id="end_date" class="form-control" readonly style="background-color: #e9ecef;">
+                        <small class="text-muted">Автоматично з типу полісу: тривалість {{ $policyTypes->first()->duration_months ?? '?' }} міс.</small>
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="alert alert-info">
+                            <strong>💰 Вартість полісу:</strong> 
+                            <span id="premium_display">0.00</span> грн
+                            <input type="hidden" name="premium" id="premium">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i> Додати поліс
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
 
     {{-- TABLE --}}
     <div class="card">
+        <div class="card-header">
+            <h4>Список полісів</h4>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover">
-                    <thead>
+                    <thead class="thead-dark">
                         <tr>
                             <th>ID</th>
                             <th>Клієнт</th>
                             <th>Тип полісу</th>
                             <th>Номер полісу</th>
                             <th>Початок</th>
-                            <th>Кінець</th>
-                            <th>Премія</th>
+                            <th>Закінчення</th>
+                            <th>Вартість полісу</th>
+                            <th>Франшиза</th>
                             <th>Статус</th>
                             <th>Дії</th>
                     </tr>
                     </thead>
-
                     <tbody>
-                    @foreach($policies as $policy)
+                    @forelse($policies as $policy)
                         <tr>
                             <td>{{ $policy->id }}</td>
                             <td>
                                 <strong>{{ $policy->client->last_name ?? 'Немає' }} {{ $policy->client->first_name ?? '' }}</strong><br>
-                                <small class="text-muted">
-                                    Тел: {{ $policy->client->phone ?? 'Немає' }}
-                                </small>
+                                <small class="text-muted">📞 {{ $policy->client->phone ?? 'Немає' }}</small>
                             </td>
                             <td>
-                                <span class="badge badge-info">
-                                    {{ $policy->policyType->name ?? 'Немає' }}
-                                </span><br>
+                                <span class="badge badge-info">{{ $policy->policyType->name ?? 'Немає' }}</span><br>
                                 <small class="text-muted">{{ $policy->policyType->code ?? '' }}</small>
+                                <br><small>📅 Термін: {{ $policy->policyType->duration_months ?? 0 }} міс.</small>
                             </td>
-                            <td>{{ $policy->policy_number }}</td>
+                            <td>
+                                <code>{{ $policy->policy_number }}</code>
+                            </td>
                             <td>{{ $policy->start_date->format('d.m.Y') }}</td>
                             <td>{{ $policy->end_date->format('d.m.Y') }}</td>
-                            <td><strong>{{ number_format($policy->premium, 2) }}</strong> грн</td>
+                            <td>
+                                <strong class="text-success">{{ number_format($policy->premium, 2) }}</strong> грн
+                            </td>
+                            <td>
+                                @if($policy->policyType->franchise_value > 0)
+                                    <span class="badge badge-warning">
+                                        {{ $policy->policyType->franchise_value }}
+                                        {{ $policy->policyType->franchise_type == 'fixed' ? 'грн' : '%' }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-secondary">Без франшизи</span>
+                                @endif
+                            </td>
                             <td>
                                 @if($policy->status == 'active')
-                                    <span class="badge badge-success">Активний</span>
+                                    <span class="badge badge-success">✅ Активний</span>
                                 @elseif($policy->status == 'expired')
-                                    <span class="badge badge-danger">Прострочений</span>
+                                    <span class="badge badge-danger">⏰ Прострочений</span>
                                 @else
-                                    <span class="badge badge-warning">Скасований</span>
+                                    <span class="badge badge-warning">❌ Скасований</span>
                                 @endif
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-warning"
-                                            data-toggle="modal"
-                                            data-target="#edit{{ $policy->id }}">
-                                        <i class="fas fa-edit"></i> ✏️
+                                    <button class="btn btn-warning" data-toggle="modal" data-target="#editModal{{ $policy->id }}" title="Редагувати">
+                                        ✏️
                                     </button>
-
-                                    <form method="POST"
-                                          action="{{ route('manager.policies.destroy', $policy) }}"
-                                          style="display:inline;"
-                                          onsubmit="return confirm('Ви впевнені?')">
+                                    <form method="POST" action="{{ route('manager.policies.destroy', $policy) }}" style="display:inline;" onsubmit="return confirm('Ви впевнені, що хочете видалити цей поліс?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-danger">
-                                            <i class="fas fa-trash"></i> 🗑
-                                        </button>
+                                        <button class="btn btn-danger" title="Видалити">🗑️</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
 
                         {{-- EDIT MODAL --}}
-                        <div class="modal fade" id="edit{{ $policy->id }}">
+                        <div class="modal fade" id="editModal{{ $policy->id }}" tabindex="-1">
                             <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h5 class="modal-title">Редагувати поліс №{{ $policy->policy_number }}</h5>
-                                        <button type="button" class="close" data-dismiss="modal">
-                                            <span>&times;</span>
-                                        </button>
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
                                     </div>
-
-                                    <form method="POST"
-                                          action="{{ route('manager.policies.update', $policy) }}">
+                                    <form method="POST" action="{{ route('manager.policies.update', $policy) }}">
                                         @csrf
                                         @method('PUT')
-
                                         <div class="modal-body">
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label>Клієнт</label>
                                                         <select name="client_id" class="form-control" required>
-                                                            <option value="">Виберіть клієнта</option>
                                                             @foreach($clients as $client)
-                                                                <option value="{{ $client->id }}" 
-                                                                    {{ $policy->client_id == $client->id ? 'selected' : '' }}>
+                                                                <option value="{{ $client->id }}" {{ $policy->client_id == $client->id ? 'selected' : '' }}>
                                                                     {{ $client->last_name }} {{ $client->first_name }} (тел: {{ $client->phone }})
                                                                 </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
-
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label>Тип полісу</label>
-                                                        <select name="policy_type_id" class="form-control" required>
-                                                            <option value="">Виберіть тип полісу</option>
+                                                        <select name="policy_type_id" class="form-control policy-type-edit" data-policy-id="{{ $policy->id }}" required>
                                                             @foreach($policyTypes as $type)
-                                                                <option value="{{ $type->id }}" 
-                                                                    {{ $policy->policy_type_id == $type->id ? 'selected' : '' }}>
-                                                                    {{ $type->name }} ({{ $type->code }})
+                                                                <option value="{{ $type->id }}" {{ $policy->policy_type_id == $type->id ? 'selected' : '' }}
+                                                                    data-premium="{{ $type->default_premium }}"
+                                                                    data-duration="{{ $type->duration_months }}">
+                                                                    {{ $type->name }} ({{ $type->code }}) - 
+                                                                    {{ number_format($type->default_premium, 2) }} грн - 
+                                                                    {{ $type->duration_months }} міс.
                                                                 </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label>Номер полісу</label>
-                                                        <input name="policy_number"
-                                                               value="{{ $policy->policy_number }}"
-                                                               class="form-control"
-                                                               required>
+                                                        <input type="text" name="policy_number" value="{{ $policy->policy_number }}" class="form-control" required>
                                                     </div>
                                                 </div>
-
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label>Премія (грн)</label>
-                                                        <input name="premium"
-                                                               value="{{ $policy->premium }}"
-                                                               class="form-control"
-                                                               required>
+                                                        <label>Статус</label>
+                                                        <select name="status" class="form-control">
+                                                            <option value="active" {{ $policy->status == 'active' ? 'selected' : '' }}>Активний</option>
+                                                            <option value="expired" {{ $policy->status == 'expired' ? 'selected' : '' }}>Прострочений</option>
+                                                            <option value="cancelled" {{ $policy->status == 'cancelled' ? 'selected' : '' }}>Скасований</option>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <label>Дата початку</label>
-                                                        <input type="date"
-                                                               name="start_date"
-                                                               value="{{ $policy->start_date->format('Y-m-d') }}"
-                                                               class="form-control"
-                                                               required>
+                                                        <input type="date" name="start_date" value="{{ $policy->start_date->format('Y-m-d') }}" class="form-control start-date-edit" data-policy-id="{{ $policy->id }}" required>
                                                     </div>
                                                 </div>
-
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label>Дата закінчення</label>
-                                                        <input type="date"
-                                                               name="end_date"
-                                                               value="{{ $policy->end_date->format('Y-m-d') }}"
-                                                               class="form-control"
-                                                               required>
+                                                        <label>Дата закінчення (розраховується автоматично)</label>
+                                                        <input type="date" id="edit_end_date_{{ $policy->id }}" class="form-control" readonly style="background-color: #e9ecef;">
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <div class="form-group">
-                                                <label>Статус</label>
-                                                <select name="status" class="form-control">
-                                                    <option value="active" {{ $policy->status == 'active' ? 'selected' : '' }}>
-                                                        Активний
-                                                    </option>
-                                                    <option value="expired" {{ $policy->status == 'expired' ? 'selected' : '' }}>
-                                                        Прострочений
-                                                    </option>
-                                                    <option value="cancelled" {{ $policy->status == 'cancelled' ? 'selected' : '' }}>
-                                                        Скасований
-                                                    </option>
-                                                </select>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="alert alert-info">
+                                                        <strong>💰 Вартість полісу:</strong> 
+                                                        <span id="edit_premium_display_{{ $policy->id }}">{{ number_format($policy->premium, 2) }}</span> грн
+                                                        <input type="hidden" name="premium" id="edit_premium_{{ $policy->id }}" value="{{ $policy->premium }}">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                                                Скасувати
-                                            </button>
-                                            <button type="submit" class="btn btn-success">
-                                                Зберегти зміни
-                                            </button>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Скасувати</button>
+                                            <button type="submit" class="btn btn-primary">Зберегти зміни</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="10" class="text-center">
+                                <div class="alert alert-info mb-0">
+                                    Немає жодного полісу
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-3">
+                {{ $policies->links() }}
             </div>
         </div>
     </div>
@@ -273,33 +303,115 @@
 
 @push('js')
 <script>
-    // Автоматичне заповнення премії та дат при виборі типу полісу
     document.addEventListener('DOMContentLoaded', function() {
-        const policyTypeSelect = document.querySelector('select[name="policy_type_id"]');
-        const premiumInput = document.querySelector('input[name="premium"]');
-        const startDateInput = document.querySelector('input[name="start_date"]');
-        const endDateInput = document.querySelector('input[name="end_date"]');
+        // Функция расчета даты окончания
+        function calculateEndDate(startDate, durationMonths) {
+            if (!startDate || !durationMonths) return '';
+            const date = new Date(startDate);
+            if (isNaN(date.getTime())) return '';
+            date.setMonth(date.getMonth() + parseInt(durationMonths));
+            return date.toISOString().split('T')[0];
+        }
+        
+        // ========== ДЛЯ ФОРМЫ СОЗДАНИЯ ==========
+        const policyTypeSelect = document.getElementById('policy_type_id');
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        const premiumDisplay = document.getElementById('premium_display');
+        const premiumHidden = document.getElementById('premium');
+        
+        function updateCreateForm() {
+            const selectedOption = policyTypeSelect.options[policyTypeSelect.selectedIndex];
+            if (!selectedOption.value) return;
+            
+            const premium = selectedOption.dataset.premium;
+            const durationMonths = selectedOption.dataset.duration;
+            
+            // Обновляем стоимость
+            if (premium) {
+                premiumDisplay.textContent = parseFloat(premium).toFixed(2);
+                premiumHidden.value = premium;
+            }
+            
+            // Обновляем дату окончания, если есть дата начала
+            if (startDateInput.value && durationMonths) {
+                const endDate = calculateEndDate(startDateInput.value, durationMonths);
+                if (endDate) {
+                    endDateInput.value = endDate;
+                }
+            }
+        }
         
         if (policyTypeSelect) {
-            policyTypeSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const defaultPremium = selectedOption.dataset.premium;
-                const durationMonths = parseInt(selectedOption.dataset.duration);
-                
-                if (defaultPremium && premiumInput) {
-                    premiumInput.value = defaultPremium;
-                }
-                
-                if (durationMonths && startDateInput && endDateInput) {
-                    const startDate = new Date();
-                    const endDate = new Date();
-                    endDate.setMonth(endDate.getMonth() + durationMonths);
-                    
-                    startDateInput.value = startDate.toISOString().split('T')[0];
-                    endDateInput.value = endDate.toISOString().split('T')[0];
+            policyTypeSelect.addEventListener('change', updateCreateForm);
+        }
+        
+        if (startDateInput) {
+            startDateInput.addEventListener('change', function() {
+                const selectedOption = policyTypeSelect.options[policyTypeSelect.selectedIndex];
+                const durationMonths = selectedOption.dataset.duration;
+                if (this.value && durationMonths) {
+                    const endDate = calculateEndDate(this.value, durationMonths);
+                    if (endDate) {
+                        endDateInput.value = endDate;
+                    }
                 }
             });
         }
+        
+        // Инициализация формы создания
+        if (policyTypeSelect && policyTypeSelect.value) {
+            updateCreateForm();
+        }
+        
+        // ========== ДЛЯ МОДАЛЬНЫХ ОКОН РЕДАКТИРОВАНИЯ ==========
+        document.querySelectorAll('.policy-type-edit').forEach(select => {
+            const policyId = select.dataset.policyId;
+            const endDateInput = document.getElementById(`edit_end_date_${policyId}`);
+            const premiumDisplay = document.getElementById(`edit_premium_display_${policyId}`);
+            const premiumHidden = document.getElementById(`edit_premium_${policyId}`);
+            const startDateInput = document.querySelector(`.start-date-edit[data-policy-id="${policyId}"]`);
+            
+            function updateEditForm() {
+                const selectedOption = select.options[select.selectedIndex];
+                const premium = selectedOption.dataset.premium;
+                const durationMonths = selectedOption.dataset.duration;
+                
+                // Обновляем стоимость
+                if (premium) {
+                    premiumDisplay.textContent = parseFloat(premium).toFixed(2);
+                    premiumHidden.value = premium;
+                }
+                
+                // Обновляем дату окончания
+                if (startDateInput && startDateInput.value && durationMonths) {
+                    const endDate = calculateEndDate(startDateInput.value, durationMonths);
+                    if (endDate && endDateInput) {
+                        endDateInput.value = endDate;
+                    }
+                }
+            }
+            
+            select.addEventListener('change', updateEditForm);
+            
+            if (startDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    const selectedOption = select.options[select.selectedIndex];
+                    const durationMonths = selectedOption.dataset.duration;
+                    if (this.value && durationMonths && endDateInput) {
+                        const endDate = calculateEndDate(this.value, durationMonths);
+                        if (endDate) {
+                            endDateInput.value = endDate;
+                        }
+                    }
+                });
+            }
+            
+            // Инициализация при открытии модального окна
+            $(select.closest('.modal')).on('shown.bs.modal', function() {
+                updateEditForm();
+            });
+        });
     });
 </script>
 @endpush
@@ -320,6 +432,16 @@
         padding: 5px 10px;
     }
     
+    .table thead th {
+        background-color: #343a40;
+        color: white;
+        vertical-align: middle;
+    }
+    
+    .table tbody td {
+        vertical-align: middle;
+    }
+    
     @media (max-width: 768px) {
         .table td, .table th {
             padding: 8px;
@@ -330,6 +452,12 @@
             padding: 4px 8px;
             font-size: 12px;
         }
+    }
+    
+    code {
+        background-color: #f4f4f4;
+        padding: 2px 5px;
+        border-radius: 3px;
     }
 </style>
 @endpush

@@ -91,67 +91,22 @@ Route::middleware('auth')->group(function () {
     ->group(function () {
 
       // Dashboard
-      Route::get('/', [DashboardController::class, 'index'])
-        ->name('dashboard');
+      Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-      /*
-      |--------------------------------------------------------------------------
-      | CLIENTS
-      |--------------------------------------------------------------------------
-      */
-      Route::get('/clients', [ClientController::class, 'index'])
-        ->name('clients.index');
+      // CLIENTS
+      Route::resource('clients', ClientController::class)
+        ->except(['show']);
 
-      Route::get('/clients/create', [ClientController::class, 'create'])
-        ->name('clients.create');
+      // POLICIES
+      Route::resource('policies', PolicyController::class)
+        ->except(['show', 'create', 'edit']);
 
-      Route::post('/clients', [ClientController::class, 'store'])
-        ->name('clients.store');
-
-      Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])
-        ->name('clients.edit');
-
-      Route::put('/clients/{client}', [ClientController::class, 'update'])
-        ->name('clients.update');
-
-      Route::delete('/clients/{client}', [ClientController::class, 'destroy'])
-        ->name('clients.destroy');
-
-      /*
-      |--------------------------------------------------------------------------
-      | POLICIES (ВИПРАВЛЕНО)
-      |--------------------------------------------------------------------------
-      */
-      Route::get('/policies', [PolicyController::class, 'index'])
-        ->name('policies.index');
-
-      Route::post('/policies', [PolicyController::class, 'store'])
-        ->name('policies.store');
-
-      Route::put('/policies/{policy}', [PolicyController::class, 'update'])
-        ->name('policies.update');
-
-      Route::delete('/policies/{policy}', [PolicyController::class, 'destroy'])
-        ->name('policies.destroy');
-    });
-  Route::middleware('role:manager')
-    ->prefix('manager')
-    ->name('manager.')
-    ->group(function () {
-      // ... інші маршрути ...
-  
       // POLICY TYPES
-      Route::get('/policy-types', [PolicyTypeController::class, 'index'])
-        ->name('policy-types.index');
-      Route::post('/policy-types', [PolicyTypeController::class, 'store'])
-        ->name('policy-types.store');
-      Route::put('/policy-types/{policyType}', [PolicyTypeController::class, 'update'])
-        ->name('policy-types.update');
-      Route::delete('/policy-types/{policyType}', [PolicyTypeController::class, 'destroy'])
-        ->name('policy-types.destroy');
-      Route::get('/analytics', [AnalyticsController::class, 'index'])
-        ->name('analytics');
+      Route::resource('policy-types', PolicyTypeController::class)
+        ->except(['show', 'create', 'edit']);
 
+      // ANALYTICS
+      Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     });
 
   /*
@@ -159,14 +114,14 @@ Route::middleware('auth')->group(function () {
   | SPECIALIST
   |--------------------------------------------------------------------------
   */
-  Route::middleware('role:specialist')->prefix('specialist')->group(function () {
+  Route::middleware('role:specialist')->prefix('specialist')->name('specialist.')->group(function () {
 
-    Route::get('/', fn() => view('specialist.dashboard'));
+    Route::get('/', fn() => view('specialist.dashboard'))->name('dashboard');
 
-    Route::get('/cases', fn() => view('specialist.cases'));
-    Route::get('/reviews', fn() => view('specialist.reviews'));
-    Route::get('/reports', fn() => view('specialist.reports'));
-    Route::get('/claims-payments', fn() => view('specialist.claims_payments'));
+    Route::get('/cases', fn() => view('specialist.cases'))->name('cases');
+    Route::get('/reviews', fn() => view('specialist.reviews'))->name('reviews');
+    Route::get('/reports', fn() => view('specialist.reports'))->name('reports');
+    Route::get('/claims-payments', fn() => view('specialist.claims_payments'))->name('claims-payments');
   });
 
   /*
@@ -174,14 +129,14 @@ Route::middleware('auth')->group(function () {
   | ACCOUNTANT
   |--------------------------------------------------------------------------
   */
-  Route::middleware('role:accountant')->prefix('accountant')->group(function () {
+  Route::middleware('role:accountant')->prefix('accountant')->name('accountant.')->group(function () {
 
-    Route::get('/', fn() => view('accountant.dashboard'));
+    Route::get('/', fn() => view('accountant.dashboard'))->name('dashboard');
 
-    Route::get('/payments', fn() => view('accountant.payments'));
-    Route::get('/payouts', fn() => view('accountant.payouts'));
-    Route::get('/debts', fn() => view('accountant.debts'));
-    Route::get('/reports', fn() => view('accountant.reports'));
+    Route::get('/payments', fn() => view('accountant.payments'))->name('payments');
+    Route::get('/payouts', fn() => view('accountant.payouts'))->name('payouts');
+    Route::get('/debts', fn() => view('accountant.debts'))->name('debts');
+    Route::get('/reports', fn() => view('accountant.reports'))->name('reports');
   });
 
   /*
@@ -189,9 +144,11 @@ Route::middleware('auth')->group(function () {
   | PROFILE
   |--------------------------------------------------------------------------
   */
-  Route::get('/profile', [ProfileController::class, 'index'])
-    ->name('profile');
-
-  Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
-    ->name('profile.password');
+  Route::prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', [ProfileController::class, 'index'])->name('index');
+    Route::post('/password', [ProfileController::class, 'updatePassword'])->name('password');
+  });
+  
+  // Добавлен алиас для route('profile')
+  Route::get('/profile-alias', [ProfileController::class, 'index'])->name('profile');
 });

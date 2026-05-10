@@ -114,78 +114,54 @@
         </div>
     </div>
 
-    {{-- Графіки та таблиці --}}
+    {{-- Графіки --}}
     <div class="row mt-4">
-        {{-- Статистика по типах полісів --}}
+        {{-- Кругова діаграма: розподіл полісів за типами --}}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title">📋 Поліси за типами</h5>
+                    <h5 class="card-title">📊 Розподіл полісів за типами</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Тип полісу</th>
-                                    <th>Кількість</th>
-                                    <th>Сума премій</th>
-                                    <th>Середня</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($policiesByType as $type)
-                                <tr>
-                                    <td>{{ $type->name }}</td>
-                                    <td>{{ $type->policies_count ?? 0 }}</td>
-                                    <td>{{ number_format($type->policies_sum_premium ?? 0, 2) }} грн</td>
-                                    <td>
-                                        @if(($type->policies_count ?? 0) > 0)
-                                            {{ number_format(($type->policies_sum_premium ?? 0) / $type->policies_count, 2) }} грн
-                                        @else
-                                            0 грн
-                                        @endif
-                                    </td>
-                                </tr>
-                                @empty
-                                    <tr><td colspan="4" class="text-center">Немає даних</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <canvas id="policiesByTypeChart" height="250"></canvas>
                 </div>
             </div>
         </div>
 
-        {{-- Топ клієнтів --}}
+        {{-- Кругова діаграма: статуси полісів --}}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">📈 Статус полісів</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="policyStatusChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        {{-- Стовпчикова діаграма: Топ клієнтів за сумою премій --}}
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title">🏆 Топ 5 клієнтів за сумою премій</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Клієнт</th>
-                                    <th>Телефон</th>
-                                    <th>Сума премій</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($topClients as $client)
-                                <tr>
-                                    <td>{{ $client->last_name }} {{ $client->first_name }}</td>
-                                    <td>{{ $client->phone }}</td>
-                                    <td>{{ number_format($client->policies_sum_premium ?? 0, 2) }} грн</td>
-                                </tr>
-                                @empty
-                                    <tr><td colspan="3" class="text-center">Немає даних</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <canvas id="topClientsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Лінійний графік: Динаміка премій за типами полісів --}}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">📉 Сума премій за типами полісів</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="premiumByTypeChart" height="250"></canvas>
                 </div>
             </div>
         </div>
@@ -273,46 +249,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Статус полісів у вигляді прогрес-бару --}}
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">📊 Статус полісів</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="progress mb-2">
-                                <div class="progress-bar bg-success" style="width: {{ $activePercentage }}%">
-                                    {{ $activePercentage }}%
-                                </div>
-                            </div>
-                            <p>Активні: {{ $activePolicies }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="progress mb-2">
-                                <div class="progress-bar bg-danger" style="width: {{ $totalPolicies > 0 ? ($expiredPolicies / $totalPolicies) * 100 : 0 }}%">
-                                    {{ $totalPolicies > 0 ? round(($expiredPolicies / $totalPolicies) * 100, 2) : 0 }}%
-                                </div>
-                            </div>
-                            <p>Прострочені: {{ $expiredPolicies }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="progress mb-2">
-                                <div class="progress-bar bg-warning" style="width: {{ $totalPolicies > 0 ? ($cancelledPolicies / $totalPolicies) * 100 : 0 }}%">
-                                    {{ $totalPolicies > 0 ? round(($cancelledPolicies / $totalPolicies) * 100, 2) : 0 }}%
-                                </div>
-                            </div>
-                            <p>Скасовані: {{ $cancelledPolicies }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 @endsection
 
@@ -331,18 +267,110 @@
         font-size: 70px;
     }
     
-    .progress {
-        height: 30px;
-        border-radius: 15px;
-    }
-    
-    .progress-bar {
-        line-height: 30px;
-        font-weight: bold;
-    }
-    
     .list-group-item {
         font-size: 16px;
     }
+    
+    canvas {
+        max-height: 300px;
+        width: 100% !important;
+    }
 </style>
+@endpush
+
+@push('js')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Кругова діаграма: розподіл полісів за типами
+        const typeNames = @json($policiesByType->pluck('name'));
+        const typeCounts = @json($policiesByType->pluck('policies_count'));
+        
+        new Chart(document.getElementById('policiesByTypeChart'), {
+            type: 'pie',
+            data: {
+                labels: typeNames,
+                datasets: [{
+                    data: typeCounts,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} полісів (${((ctx.raw / {{ $totalPolicies }}) * 100).toFixed(1)}%)` } }
+                }
+            }
+        });
+
+        // 2. Кругова діаграма: статуси полісів
+        new Chart(document.getElementById('policyStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Активні', 'Прострочені', 'Скасовані'],
+                datasets: [{
+                    data: [{{ $activePolicies }}, {{ $expiredPolicies }}, {{ $cancelledPolicies }}],
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} полісів (${((ctx.raw / {{ $totalPolicies }}) * 100).toFixed(1)}%)` } }
+                }
+            }
+        });
+
+        // 3. Стовпчикова діаграма: Топ 5 клієнтів
+        const clientNames = @json($topClients->map(fn($c) => $c->last_name . ' ' . $c->first_name));
+        const clientPremiums = @json($topClients->pluck('policies_sum_premium'));
+        
+        new Chart(document.getElementById('topClientsChart'), {
+            type: 'bar',
+            data: {
+                labels: clientNames,
+                datasets: [{
+                    label: 'Сума премій (грн)',
+                    data: clientPremiums,
+                    backgroundColor: '#36A2EB',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'грн' } } },
+                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.toFixed(2)} грн` } } }
+            }
+        });
+
+        // 4. Стовпчикова діаграма: Сума премій за типами полісів
+        const typePremiums = @json($policiesByType->pluck('policies_sum_premium'));
+        
+        new Chart(document.getElementById('premiumByTypeChart'), {
+            type: 'bar',
+            data: {
+                labels: typeNames,
+                datasets: [{
+                    label: 'Сума премій (грн)',
+                    data: typePremiums,
+                    backgroundColor: '#FF9F40',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'грн' } } },
+                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.toFixed(2)} грн` } } }
+            }
+        });
+    });
+</script>
 @endpush

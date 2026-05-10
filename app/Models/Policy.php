@@ -9,16 +9,13 @@ class Policy extends Model
 {
     use HasFactory;
 
-    // ВИМИКАЄМО auto timestamps
+    // Отключаем автоматические timestamps
     public $timestamps = false;
-
-    const STATUS_ACTIVE = 'active';
-    const STATUS_EXPIRED = 'expired';
-    const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'client_id',
-        'policy_type_id', 
+        'policy_type_id',
+        'application_id',
         'policy_number',
         'start_date',
         'end_date',
@@ -40,5 +37,10 @@ class Policy extends Model
     public function policyType()
     {
         return $this->belongsTo(PolicyType::class);
+    }
+    
+    public function application()
+    {
+        return $this->belongsTo(Application::class);
     }
 }

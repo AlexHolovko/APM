@@ -14,6 +14,8 @@ class PolicyType extends Model
         'code',
         'description',
         'default_premium',
+        'franchise_value',
+        'franchise_type',
         'duration_months',
         'conditions',
         'is_active',
@@ -21,7 +23,8 @@ class PolicyType extends Model
 
     protected $casts = [
         'default_premium' => 'decimal:2',
-        'conditions' => 'array',
+        'franchise_value' => 'decimal:2',
+        'duration_months' => 'integer',
         'is_active' => 'boolean',
     ];
 
