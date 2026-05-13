@@ -9,13 +9,11 @@ class Policy extends Model
 {
     use HasFactory;
 
-    // Отключаем автоматические timestamps
-    public $timestamps = false;
+    public $timestamps = false; // Если нет created_at/updated_at
 
     protected $fillable = [
         'client_id',
         'policy_type_id',
-        'application_id',
         'policy_number',
         'start_date',
         'end_date',
@@ -39,8 +37,9 @@ class Policy extends Model
         return $this->belongsTo(PolicyType::class);
     }
     
-    public function application()
-    {
-        return $this->belongsTo(Application::class);
-    }
+    // Закомментируйте или удалите, если нет таблицы applications
+    // public function application()
+    // {
+    //     return $this->belongsTo(Application::class);
+    // }
 }

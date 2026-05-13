@@ -349,12 +349,12 @@ return [
       'icon' => 'fas fa-users',
       'can' => 'admin',
     ],
-    [
+    /*[
       'text' => 'Ролі та доступи',
       'url' => '/admin/roles',
       'icon' => 'fas fa-user-cog',
       'can' => 'admin',
-    ],
+    ],*/
     [
       'text' => 'Аудит системи',
       'url' => '/admin/audit',
@@ -364,100 +364,98 @@ return [
 
     // ================= MANAGER =================
     [
-    'header' => 'МЕНЕДЖЕР',
-],
-[
-    'text' => 'Панель менеджера',
-    'route' => 'manager.dashboard',
-    'icon' => 'fas fa-chart-line',
-    'can' => 'manager',
-],
-[
-    'text' => 'Клієнти (CRM)',
-    'route' => 'manager.clients.index',
-    'icon' => 'fas fa-user-friends',
-    'can' => 'manager',
-],
-[
-    'text' => 'Типи полісів',
-    'route' => 'manager.policy-types.index',
-    'icon' => 'fas fa-list',
-    'can' => 'manager',
-],
-[
-    'text' => 'Поліси',
-    'route' => 'manager.policies.index',
-    'icon' => 'fas fa-file-contract',
-    'can' => 'manager',
-],
-[
-    'text' => 'Аналітика',
-    'route' => 'manager.analytics',
-    'icon' => 'fas fa-chart-line',
-    'can' => 'manager',
-],
+      'header' => 'МЕНЕДЖЕР',
+    ],
+    [
+      'text' => 'Панель менеджера',
+      'route' => 'manager.dashboard',
+      'icon' => 'fas fa-chart-line',
+      'can' => 'manager',
+    ],
+    [
+      'text' => 'Клієнти (CRM)',
+      'route' => 'manager.clients.index',
+      'icon' => 'fas fa-user-friends',
+      'can' => 'manager',
+    ],
+    [
+      'text' => 'Типи полісів',
+      'route' => 'manager.policy-types.index',
+      'icon' => 'fas fa-list',
+      'can' => 'manager',
+    ],
+    [
+      'text' => 'Поліси',
+      'route' => 'manager.policies.index',
+      'icon' => 'fas fa-file-contract',
+      'can' => 'manager',
+    ],
+    [
+      'text' => 'Аналітика',
+      'route' => 'manager.analytics',
+      'icon' => 'fas fa-chart-line',
+      'can' => 'manager',
+    ],
 
-// [
+    // [
 //     'text' => 'Заявки',
 //     'route' => 'manager.applications.index',
 //     'icon' => 'fas fa-inbox',
 //     'can' => 'manager',
 // ],
 
-
-    // ================= SPECIALIST =================
-    ['header' => 'СТРАХОВІ ВИПАДКИ'],
+      // ================= SPECIALIST =================
+    ['header' => 'СТРАХОВІ ВИПАДКИ', 'can' => 'specialist'],
 
     [
       'text' => 'Панель спеціаліста',
-      'url' => '/specialist',
-      'icon' => 'fas fa-user-md',
+      'route' => 'specialist.dashboard',
+      'icon' => 'fas fa-chart-line',
       'can' => 'specialist',
     ],
     [
-      'text' => 'Активні випадки',
-      'url' => '/specialist/cases',
+      'text' => 'Новий випадок',
+      'route' => 'specialist.case.create', 
+      'icon' => 'fas fa-plus-circle',
+      'can' => 'specialist',
+    ],
+    [
+      'text' => 'Всі випадки',
+      'route' => 'specialist.cases',
       'icon' => 'fas fa-briefcase-medical',
       'can' => 'specialist',
     ],
-    [
-      'text' => 'Розгляд',
-      'url' => '/specialist/reviews',
-      'icon' => 'fas fa-search',
-      'can' => 'specialist',
-    ],
+    
 
     // ================= ACCOUNTANT =================
-    ['header' => 'ФІНАНСИ'],
+    ['header' => 'ФІНАНСИ', 'can' => 'accountant'],
 
     [
       'text' => 'Панель бухгалтера',
-      'url' => '/accountant',
-      'icon' => 'fas fa-calculator',
+      'route' => 'accountant.dashboard',
+      'icon' => 'fas fa-chart-line',
       'can' => 'accountant',
     ],
     [
       'text' => 'Виплати',
-      'url' => '/accountant/payouts',
-      'icon' => 'fas fa-money-bill',
+      'route' => 'accountant.payouts',
+      'icon' => 'fas fa-money-bill-wave',
       'can' => 'accountant',
     ],
     [
       'text' => 'Звіти',
-      'url' => '/accountant/reports',
+      'route' => 'accountant.reports',
       'icon' => 'fas fa-chart-pie',
       'can' => 'accountant',
     ],
 
     // ================= PROFILE =================
-    ['header' => 'НАЛАШТУВАННЯ'],
 
     [
       'text' => 'Профіль',
       'route' => 'profile',
       'icon' => 'fas fa-user',
       'topnav_right' => true,
-      'can' => 'auth',
     ],
   ],
   /*
