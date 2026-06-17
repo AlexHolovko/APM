@@ -2,11 +2,13 @@
 
 @section('title', 'Поліси')
 
+@section('content_header')
+    <h1><i class="fas fa-file-contract"></i> Поліси</h1>
+@stop
+
 @section('content')
 
 <div class="container-fluid">
-    <h3>Поліси</h3>
-
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -292,9 +294,40 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-3">
-                {{ $policies->links() }}
+            
+            {{-- КОМПАКТНА ПАГІНАЦІЯ - МАЛЕНЬКІ СТРІЛКИ --}}
+            @if($policies->hasPages())
+            <div class="mt-3 d-flex justify-content-center">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        {{-- Previous Page Link --}}
+                        @if ($policies->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $policies->previousPageUrl() }}" rel="prev">&laquo;</a></li>
+                        @endif
+
+                        {{-- Pagination Elements --}}
+                        @foreach ($policies->getUrlRange(1, $policies->lastPage()) as $page => $url)
+                            @if ($page == $policies->currentPage())
+                                <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                            @endif
+                        @endforeach
+
+                        {{-- Next Page Link --}}
+                        @if ($policies->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $policies->nextPageUrl() }}" rel="next">&raquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        @endif
+                    </ul>
+                </nav>
             </div>
+            @endif
+            {{-- КІНЕЦЬ КОМПАКТНОЇ ПАГІНАЦІЇ --}}
+            
         </div>
     </div>
 </div>
@@ -458,6 +491,25 @@
         background-color: #f4f4f4;
         padding: 2px 5px;
         border-radius: 3px;
+    }
+    
+    /* Стилі для компактної пагінації */
+    .pagination.pagination-sm {
+        gap: 2px;
+    }
+    .pagination.pagination-sm .page-link {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 3px;
+    }
+    .pagination.pagination-sm .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .pagination.pagination-sm .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #fff;
+        border-color: #dee2e6;
     }
 </style>
 @endpush

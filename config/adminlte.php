@@ -395,16 +395,31 @@ return [
       'route' => 'manager.analytics',
       'icon' => 'fas fa-chart-line',
       'can' => 'manager',
+    ],                  
+    
+    // ================= ФІНАНСИ =================
+    ['header' => 'ФІНАНСИ'],
+
+    [
+      'text' => 'Панель бухгалтера',
+      'route' => 'accountant.dashboard',
+      'icon' => 'fas fa-chart-line',
+      'can' => 'manager',  // ← ТІЛЬКИ ЦЕ ЗМІНЕНО
+    ],
+    [
+      'text' => 'Виплати',
+      'route' => 'accountant.payouts',
+      'icon' => 'fas fa-money-bill-wave',
+      'can' => 'manager',  // ← ТІЛЬКИ ЦЕ ЗМІНЕНО
+    ],
+    [
+      'text' => 'Звіти',
+      'route' => 'accountant.reports',
+      'icon' => 'fas fa-chart-pie',
+      'can' => 'manager',  // ← ТІЛЬКИ ЦЕ ЗМІНЕНО
     ],
 
-    // [
-//     'text' => 'Заявки',
-//     'route' => 'manager.applications.index',
-//     'icon' => 'fas fa-inbox',
-//     'can' => 'manager',
-// ],
-
-      // ================= SPECIALIST =================
+    // ================= SPECIALIST =================
     ['header' => 'СТРАХОВІ ВИПАДКИ', 'can' => 'specialist'],
 
     [
@@ -425,32 +440,8 @@ return [
       'icon' => 'fas fa-briefcase-medical',
       'can' => 'specialist',
     ],
-    
-
-    // ================= ACCOUNTANT =================
-    ['header' => 'ФІНАНСИ', 'can' => 'accountant'],
-
-    [
-      'text' => 'Панель бухгалтера',
-      'route' => 'accountant.dashboard',
-      'icon' => 'fas fa-chart-line',
-      'can' => 'accountant',
-    ],
-    [
-      'text' => 'Виплати',
-      'route' => 'accountant.payouts',
-      'icon' => 'fas fa-money-bill-wave',
-      'can' => 'accountant',
-    ],
-    [
-      'text' => 'Звіти',
-      'route' => 'accountant.reports',
-      'icon' => 'fas fa-chart-pie',
-      'can' => 'accountant',
-    ],
 
     // ================= PROFILE =================
-
     [
       'text' => 'Профіль',
       'route' => 'profile',

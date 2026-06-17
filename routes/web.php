@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\AuditController;
 
 use App\Http\Controllers\Specialist\SpecialistController;
+use App\Http\Controllers\Accountant\AccountantController;
 
 use App\Models\AuditLog;
 
@@ -68,7 +69,7 @@ Route::post('/login', function (Request $request) {
       'admin' => redirect('/admin'),
       'manager' => redirect('/manager'),
       'specialist' => redirect('/specialist'),
-      'accountant' => redirect('/accountant'),
+      'accountant' => redirect('/accountant'), // Перенаправляем бухгалтера на его страницы
       default => redirect('/home'),
     };
   }
@@ -147,99 +148,98 @@ Route::middleware('auth')->group(function () {
   | MANAGER
   |--------------------------------------------------------------------------
   */
-  Route::middleware('role:manager')
+  Route::middleware(['auth', 'role:manager'])
     ->prefix('manager')
     ->name('manager.')
     ->group(function () {
-
-      // Dashboard
-      Route::get('/', [ManagerDashboardController::class, 'index'])->name('dashboard');
-
-      // CLIENTS
-      Route::resource('clients', ClientController::class)
-        ->except(['show']);
-
-      // POLICIES
-      Route::resource('policies', PolicyController::class)
-        ->except(['show', 'create', 'edit']);
-
-      // POLICY TYPES
-      Route::resource('policy-types', PolicyTypeController::class)
-        ->except(['show', 'create', 'edit']);
-
-      // ANALYTICS
-      Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+        
+        // Dashboard менеджера
+        Route::get('/', [ManagerDashboardController::class, 'index'])->name('dashboard');
+        
+        // CRM - Клієнти
+        Route::resource('clients', ClientController::class)->except(['show']);
+        
+        // Поліси
+        Route::resource('policies', PolicyController::class)->except(['show', 'create', 'edit']);
+        
+        // Типи полісів
+        Route::resource('policy-types', PolicyTypeController::class)->except(['show', 'create', 'edit']);
+        
+        // Аналітика
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     });
+
   /*
-|--------------------------------------------------------------------------
-| SPECIALIST
-|--------------------------------------------------------------------------
-*/
+  |--------------------------------------------------------------------------
+  | ACCOUNTANT (доступ для менеджера)
+  |--------------------------------------------------------------------------
+  */
+  Route::middleware(['auth', 'role:manager'])  // ← доступ для менеджера
+    ->prefix('accountant')
+    ->name('accountant.')
+    ->group(function () {
+        
+        Route::get('/', [AccountantController::class, 'dashboard'])->name('dashboard');
+        
+        // Платежі (прострочені)
+        Route::get('/payments', [AccountantController::class, 'payments'])->name('payments');
+        
+        // Виплати
+        Route::get('/payouts', [AccountantController::class, 'payouts'])->name('payouts');
+        Route::get('/payouts/{id}', [AccountantController::class, 'show'])->name('payouts.show');
+        Route::put('/payouts/{id}', [AccountantController::class, 'update'])->name('payouts.update');
+        
+        // Заборгованості
+        Route::get('/debts', [AccountantController::class, 'debts'])->name('debts');
+        
+        // Звіти
+        Route::get('/reports', [AccountantController::class, 'reports'])->name('reports');
+        Route::get('/reports/export', [AccountantController::class, 'exportReport'])->name('reports.export');
+        Route::get('/reports/export-word', [AccountantController::class, 'exportReportToWord'])->name('reports.export-word');
+        Route::get('/payment/{id}', [AccountantController::class, 'getPaymentDetails'])->name('payment.details');
+    });
+
+  /*
+  |--------------------------------------------------------------------------
+  | SPECIALIST
+  |--------------------------------------------------------------------------
+  */
   Route::middleware(['auth', 'role:specialist'])
     ->prefix('specialist')
     ->name('specialist.')
     ->group(function () {
 
       // Dashboard
-      Route::get('/', [App\Http\Controllers\Specialist\SpecialistController::class, 'dashboard'])->name('dashboard');
+      Route::get('/', [SpecialistController::class, 'dashboard'])->name('dashboard');
 
       // Список випадків
-      Route::get('/cases', [App\Http\Controllers\Specialist\SpecialistController::class, 'cases'])->name('cases');
+      Route::get('/cases', [SpecialistController::class, 'cases'])->name('cases');
 
       // Створення випадку
-      Route::get('/case/create', [App\Http\Controllers\Specialist\SpecialistController::class, 'create'])->name('case.create');
-      Route::post('/case', [App\Http\Controllers\Specialist\SpecialistController::class, 'store'])->name('case.store');
+      Route::get('/case/create', [SpecialistController::class, 'create'])->name('case.create');
+      Route::post('/case', [SpecialistController::class, 'store'])->name('case.store');
 
       // Перегляд випадку
-      Route::get('/case/{id}', [App\Http\Controllers\Specialist\SpecialistController::class, 'show'])->name('case.show');
+      Route::get('/case/{id}', [SpecialistController::class, 'show'])->name('case.show');
 
       // Розгляд випадку
-      Route::get('/case/{id}/review', [App\Http\Controllers\Specialist\SpecialistController::class, 'review'])->name('case.review');
+      Route::get('/case/{id}/review', [SpecialistController::class, 'review'])->name('case.review');
 
       // Оновлення статусу
-      Route::put('/case/{id}/status', [App\Http\Controllers\Specialist\SpecialistController::class, 'updateStatus'])->name('case.status');
+      Route::put('/case/{id}/status', [SpecialistController::class, 'updateStatus'])->name('case.status');
 
       // Редагування випадку
-      Route::get('/case/{id}/edit', [App\Http\Controllers\Specialist\SpecialistController::class, 'edit'])->name('case.edit');
-      Route::put('/case/{id}', [App\Http\Controllers\Specialist\SpecialistController::class, 'update'])->name('case.update');
+      Route::get('/case/{id}/edit', [SpecialistController::class, 'edit'])->name('case.edit');
+      Route::put('/case/{id}', [SpecialistController::class, 'update'])->name('case.update');
 
       // Видалення випадку
-      Route::delete('/case/{id}', [App\Http\Controllers\Specialist\SpecialistController::class, 'destroy'])->name('case.destroy');
+      Route::delete('/case/{id}', [SpecialistController::class, 'destroy'])->name('case.destroy');
 
       // Пошук поліса (AJAX)
-      Route::get('/search-policy', [App\Http\Controllers\Specialist\SpecialistController::class, 'searchPolicy'])->name('policy.search');
-      Route::get('/policy/{id}', [App\Http\Controllers\Specialist\SpecialistController::class, 'getPolicy'])->name('policy.get');
+      Route::get('/search-policy', [SpecialistController::class, 'searchPolicy'])->name('policy.search');
+      Route::get('/policy/{id}', [SpecialistController::class, 'getPolicy'])->name('policy.get');
     });
- /*
-/*
-|--------------------------------------------------------------------------
-| ACCOUNTANT
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'role:accountant'])
-    ->prefix('accountant')
-    ->name('accountant.')
-    ->group(function () {
-        
-        Route::get('/', [App\Http\Controllers\Accountant\AccountantController::class, 'dashboard'])->name('dashboard');
-        
-        // Платежі (прострочені)
-        Route::get('/payments', [App\Http\Controllers\Accountant\AccountantController::class, 'payments'])->name('payments');
-        
-        // Виплати
-        Route::get('/payouts', [App\Http\Controllers\Accountant\AccountantController::class, 'payouts'])->name('payouts');
-        Route::get('/payouts/{id}', [App\Http\Controllers\Accountant\AccountantController::class, 'show'])->name('payouts.show');
-        Route::put('/payouts/{id}', [App\Http\Controllers\Accountant\AccountantController::class, 'update'])->name('payouts.update');
-        
-        // Заборгованості
-        Route::get('/debts', [App\Http\Controllers\Accountant\AccountantController::class, 'debts'])->name('debts');
-        
-        // Звіти
-        Route::get('/reports', [App\Http\Controllers\Accountant\AccountantController::class, 'reports'])->name('reports');
-        Route::get('/reports/export', [App\Http\Controllers\Accountant\AccountantController::class, 'exportReport'])->name('reports.export');
-        Route::get('/reports/export-word', [App\Http\Controllers\Accountant\AccountantController::class, 'exportReportToWord'])->name('reports.export-word');
-        Route::get('/accountant/payment/{id}', [App\Http\Controllers\Accountant\AccountantController::class, 'getPaymentDetails'])->name('accountant.payment.details');
-    });
+
   /*
   |--------------------------------------------------------------------------
   | PROFILE
